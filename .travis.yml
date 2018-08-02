@@ -1,0 +1,20 @@
+language: node_js
+node_js:
+  - "8"
+dist: trusty
+sudo: required
+cache:
+  yarn: true
+  directories:
+    - node_modules
+install:
+  - yarn
+script:
+  - yarn test
+
+notifications:
+  email:
+    - we.veggieavocado@gmail.com
+    - ppark9553@gmail.com
+  on_success: always
+  on_failure: always
