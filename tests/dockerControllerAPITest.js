@@ -29,14 +29,38 @@ describe('도커 컨트롤러 테스트', async () => {
     done();
   });
   // 테스트 #2: API 요청으로 컨테이너 리스트를 가져올 수 있는지 확인하기
-  it('/docker/api/v1/listContainers/ 요청으로 도커 컨테이너 리스트를 가져올 수 있다', (done) => {
+  it('/docker/api/v1/listContainers/', (done) => {
     chai.request(server) // 우선 서버로 요청을 보낸다
       .get('/docker/api/v1/listContainers') // 테스트하고 싶은 API URL을 GET한다
       .end((err, res) => {
-        expect(err).to.be.null; 
+        expect(err).to.be.null;
         expect(res).to.status(200);
         expect(res.body).to.be.an('array'); // 리턴된 값이 어레이인지 확인
         setTimeout(done, 4000);
       });
   }).timeout(15000);
+
+  // 테스트 #3: API 요청을 통해 도커 이미지를 pull 한다.
+  it('/docker/api/v1/img-pull/', (done) => {
+    chai.request(server)
+      .post('/docker/api/v1/img-build/')
+      .send({ image: 'ubuntu' })
+      .end((err, res) => {
+        expect(err).to.be.null;
+        expect(res).to.have.status(200);
+        done();
+      });
+  });
+
+  // 테스트 #4 : API를 통해 image를 build 한다.
+  it('/docker/api/v1/img-build/', (done) => {
+    chai.request(server)
+      .post('/docker/api/v1/img-build/')
+      .send({ path: './ubuntu.tar', tag: 'test' })
+      .end((err, res) => {
+        expect(err).to.be.null;
+        expect(res).to.have.status(200);
+        setTimeout(done, 16000);
+      });
+  }).timeout(32000);
 });

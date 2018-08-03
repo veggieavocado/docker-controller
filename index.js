@@ -44,7 +44,7 @@ app.post('/', async (req, res) => {
 
 // API: /docker/api/v1/img-pull (POST)
 // 설명: POST 데이터에 도커 이미지 정보를 json 형식으로 넣고 send하면 그 내역에 맞는 도커 이미지를 로컬에 풀한다.
-// 형식: myrepo/myname:tag 형식으로 post에 image:[ message ], message 안에 넣어 post 한다.
+// 형식: myrepo/myname:tag 형식으로 post에 image:< message >, message 안에 넣어 post 한다.
 app.post('/docker/api/v1/img-pull/', async (req, res) => {
   const ImgName = req.body.image;
   // console.log(ImgName);
@@ -70,12 +70,19 @@ app.post('/docker/api/v1/img-build/', async (req, res) => {
   const pathName = req.body.path;
   const tagName = req.body.tag;
   const docker = new Docker({ host: '127.0.0.1' });
-  docker.buildImage(pathName, { t: tagName }, (err, response) => {
+  docker.buildImage(pathName, { t: tagName }, (err, stream) => {
     if (err) {
       res.json(err);
+      res.status(400);
     } else {
-      res.json(response);
+      res.status(200);
     }
+    // stream.pipe(process.stdout, {
+    //   end: true
+    // });
+    // stream.on('end', () => {
+    //   res.status(200);
+    // });
   });
 });
 
