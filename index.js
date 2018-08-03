@@ -6,7 +6,7 @@ const app = express();
 const Docker = require('dockerode');
 
 const docker = new Docker({ socketPath: '/var/run/docker.sock' });
-const sys = require('sys')
+const sys = require('sys');
 const exec = require('child_process').exec;
 const fs = require('fs');
 // const docker = new Docker(); // 위의 코드와 일치
@@ -46,17 +46,18 @@ app.post('/', async (req, res) => {
 // 설명: POST 데이터에 도커 이미지 정보를 json 형식으로 넣고 send하면 그 내역에 맞는 도커 이미지를 로컬에 풀한다.
 // 형식: myrepo/myname:tag 형식으로 post에 image:[ message ], message 안에 넣어 post 한다.
 app.post('/docker/api/v1/img-pull/', async (req, res) => {
-  var ImgName = req.body["image"];
+  const ImgName = req.body.image;
   // console.log(ImgName);
   // console.log(req);
-  var docker = new Docker({ host: '127.0.0.1' });
-  docker.pull(ImgName, function (err, stream) {
+  const docker = new Docker({ host: '127.0.0.1' });
+  docker.pull(ImgName, (err, stream) => {
     if (!err) {
-      console.log("Successfully pulled");
-      res.json({ status: "success" });
-    }
-    else {
+      console.log('Successfully pulled');
+      res.status(200);
+      res.json({ status: 'success' });
+    } else {
       console.log(err);
+      res.status(400);
       res.json(err);
     }
   });
@@ -66,17 +67,16 @@ app.post('/docker/api/v1/img-pull/', async (req, res) => {
 // 설명: POST 매서드를 이용하여 dockerfile의 경로와 tag명을 파싱해 도커 이미지를 빌드한다.
 // 형식: post 안의 메시지 형식은 다음 { path : <pathname>, tag : <tagname> } 와 같다.
 app.post('/docker/api/v1/img-build/', async (req, res) => {
-  var pathName = req.body["path"];
-  var tagName = req.body["tag"];
-  var docker = new Docker({ host: '127.0.0.1' });
-  docker.buildImage(pathName, { t: tagName }, function (err, response) {
+  const pathName = req.body.path;
+  const tagName = req.body.tag;
+  const docker = new Docker({ host: '127.0.0.1' });
+  docker.buildImage(pathName, { t: tagName }, (err, response) => {
     if (err) {
       res.json(err);
-    }
-    else {
+    } else {
       res.json(response);
     }
-  })
+  });
 });
 
 
@@ -84,9 +84,9 @@ app.post('/docker/api/v1/img-build/', async (req, res) => {
 // 설명: POST 매서드를 이용하여 image 이름을 파싱하여 로컬에서 삭제한다.
 // 형식: post 안의 메시지 형식은 다음 { image: <imageName> } 와 같다.
 app.post('/docker/api/v1/img-delete/', async (req, res) => {
-  var imageName = req.body["image"];
-  var docker = new Docker({ host: '127.0.0.1' });
-  docker.getImage(imageName).remove(function (err, data) {
+  const imageName = req.body.image;
+  const docker = new Docker({ host: '127.0.0.1' });
+  docker.getImage(imageName).remove((err, data) => {
     if (err) {
       console.log(err);
     }
@@ -98,19 +98,17 @@ app.post('/docker/api/v1/img-delete/', async (req, res) => {
 // API: /docker/api/v1/img-delete-all (GET)
 // 설명: GET 매서드를 이용하여 모든 이미지들을 삭제한다.
 app.get('/docker/api/v1/img-delete-all/', async (req, res) => {
-  exec("sudo docker rmi -f $(sudo docker images -q)", function (err, stdout, stderr) {
+  exec('sudo docker rmi -f $(sudo docker images -q)', (err, stdout, stderr) => {
     if (err) {
       // 명령 시도 자체에 오류가 있을 경우.
       console.log(err);
       res.json(err);
-    }
-    else {
+    } else {
       // 콘솔에서 오류가 발생했을 경우.
       if (stderr) {
         console.log(stderr);
         res.json(stderr);
-      }
-      else {
+      } else {
         // 오류가 발생하지 않고 단순 처리 구문만 나왔을 경우.
         console.log(stdout);
         res.json(stdout);
@@ -124,30 +122,28 @@ app.get('/docker/api/v1/img-delete-all/', async (req, res) => {
 // 설명: POST 매서드를 이용하여 image와 path를 파싱하여 해당 path의 image를 run 하도록 수행.
 // 형식: post 안의 메시지 형식은 다음 { image: <image name>, path : [ "bash", "-c", "uname -s"] .. (예시)) 와 같다.
 app.post('/docker/api/v1/img-run/', async (req, res) => {
-  var imageName = req.body["image"];
-  var pathArray = req.body["path"];
-  docker.run(imageName, pathArray, process.stdout, function(err, data, container){
-    if( err ) {
+  const imageName = req.body.image;
+  const pathArray = req.body.path;
+  docker.run(imageName, pathArray, process.stdout, (err, data, container) => {
+    if (err) {
       res.json(err);
       console.log(err);
-    }
-    else{
+    } else {
       console.log(data);
       res.json(data);
     }
-  })
+  });
 });
-
 
 
 // API: /docker/api/v1/stop (POST)
 // 설명: POST 매서드를 이용하여 container name을 파싱하여 해당 컨테이너를 종료한다.
 // 형식: post 안의 메시지 형식은 다음 { 'container' : <containerName> } 와 같다.
 app.post('/docker/api/v1/stop/', async (req, res) => {
-  var containerName = req.body["container"];
+  const containerName = req.body.container;
   container = docker.getContainer(containerName);
   container.stop();
-  res.json("Done!");
+  res.json('Done!');
 });
 
 
@@ -155,7 +151,7 @@ app.post('/docker/api/v1/stop/', async (req, res) => {
 // 설명: POST 매서드를 이용하여 로컬에서 실행중인 모든 도커 컨테이너를 종료한다.
 // 관리자 권한을 필요로 함.
 app.post('/docker/api/v1/stop-all/', async (req, res) => {
-  exec("sudo docker stop $(sudo docker ps -a -q )");
+  exec('sudo docker stop $(sudo docker ps -a -q )');
 });
 
 
@@ -163,32 +159,33 @@ app.post('/docker/api/v1/stop-all/', async (req, res) => {
 // 설명: POST 매서드를 이용, container-name을 파싱하여 해당 컨테이너의 상태를 json으로 send.
 // 형식: 'container':<Container Name>
 app.post('/docker/api/v1/state/', async (req, res) => {
-  ContainerName = req.body["container"];
-  var Response = {PS:"", STATS:""};
-  exec(`sudo docker ps -a | grep ${ContainerName} > ./tmpPs`, (err, stdout, stderr)=>{
+  ContainerName = req.body.container;
+  const Response = { PS: '', STATS: '' };
+  exec(`sudo docker ps -a | grep ${ContainerName} > ./tmpPs`, (err, stdout, stderr) => {
     exec('sudo chmod +wx ./tmpPs');
-    fs.readFile('./tmpPs', 'utf8', function (err,data) {
+    fs.readFile('./tmpPs', 'utf8', (err, data) => {
       if (err) {
         console.log(err);
-        Response['PS'] = err;
-      }else {
+        Response.PS = err;
+      } else {
         console.log(data);
-      Response['PS'] = data;}
+        Response.PS = data;
+      }
     });
   });
-  exec(`sudo docker stats ${ContainerName} --no-stream > ./tmpStats`, (err, stdout, stderr) =>{
+  exec(`sudo docker stats ${ContainerName} --no-stream > ./tmpStats`, (err, stdout, stderr) => {
     exec('sudo chmod +wx ./tmpStats');
-    fs.readFile('./tmpStats', 'utf8', function (err,data) {
+    fs.readFile('./tmpStats', 'utf8', (err, data) => {
       if (err) {
         console.log(err);
-        Response['STATS'] = err;
-      }
-      else{
+        Response.STATS = err;
+      } else {
         console.log(data);
-      Response['STATS'] = data;}
+        Response.STATS = data;
+      }
       console.log(Response);
       res.json(Response);
-    }); 
+    });
   });
 });
 
@@ -198,12 +195,11 @@ app.post('/docker/api/v1/state/', async (req, res) => {
 // 형식: 'container':<Container Name>, 반드시 슈퍼유저 권한을 획득하고 진행해야 함.
 // 출력: 10줄만 출력
 app.post('/docker/api/v1/log/', async (req, res) => {
-  ContainerName  = req.body["container"];
-  exec(`sudo tail -10 /var/lib/docker/containers/${ContainerName}*/${ContainerName}*-json.log`, (err, stdout, stderr)=>{
-    if( err ) {
+  ContainerName = req.body.container;
+  exec(`sudo tail -10 /var/lib/docker/containers/${ContainerName}*/${ContainerName}*-json.log`, (err, stdout, stderr) => {
+    if (err) {
       res.json(err);
-    }
-    else{
+    } else {
       res.json(stdout);
     }
   });
@@ -214,12 +210,11 @@ app.post('/docker/api/v1/log/', async (req, res) => {
 // 설명: POST 매서드를 이용, path를 파싱하여 해당 경로에서 compose-up 수행.
 // 형식: path:<Path-Name>, 반드시 슈퍼유저 권한을 획득하고 진행해야 함.
 app.post('/docker/api/v1/up/', async (req, res) => {
-  pathName  = req.body["path"];
-  exec(`docker-compose p -d --build ${pathName}`, (err, stdout, stderr)=>{
-    if( err ) {
+  pathName = req.body.path;
+  exec(`docker-compose p -d --build ${pathName}`, (err, stdout, stderr) => {
+    if (err) {
       res.json(err);
-    }
-    else{
+    } else {
       res.json(stdout);
     }
   });

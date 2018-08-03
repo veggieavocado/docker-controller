@@ -14,6 +14,7 @@ const { server, stopServer } = require('../index.js');
 describe('도커 컨트롤러 테스트', async () => {
   beforeEach(() => {
     this.request = chai.request(server);
+
     // 테스트 내부에서 this.request를 사용할 수 있게해줌
   });
 
@@ -32,10 +33,10 @@ describe('도커 컨트롤러 테스트', async () => {
     chai.request(server) // 우선 서버로 요청을 보낸다
       .get('/docker/api/v1/listContainers') // 테스트하고 싶은 API URL을 GET한다
       .end((err, res) => {
-        expect(err).to.be.null;
+        expect(err).to.be.null; 
         expect(res).to.status(200);
         expect(res.body).to.be.an('array'); // 리턴된 값이 어레이인지 확인
-        done();
+        setTimeout(done, 4000);
       });
-  });
+  }).timeout(15000);
 });
