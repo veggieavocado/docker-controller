@@ -43,14 +43,14 @@ describe('도커 컨트롤러 테스트', async () => {
   // 테스트 #3: API 요청을 통해 도커 이미지를 pull 한다.
   it('/docker/api/v1/img-pull/', (done) => {
     chai.request(server)
-      .post('/docker/api/v1/img-build/')
+      .post('/docker/api/v1/img-pull/')
       .send({ image: 'ubuntu' })
       .end((err, res) => {
         expect(err).to.be.null;
         expect(res).to.have.status(200);
-        done();
+        setTimeout(done, 80000);
       });
-  });
+  }).timeout(180000);
 
   // 테스트 #4 : API를 통해 image를 build 한다.
   it('/docker/api/v1/img-build/', (done) => {
@@ -63,4 +63,86 @@ describe('도커 컨트롤러 테스트', async () => {
         setTimeout(done, 16000);
       });
   }).timeout(32000);
+
+  // 테스트 #5 : API를 통해 특정 이미지를 제거한다.
+  it('/docker/api/v1/img-delete/', (done) => {
+    chai.request(server)
+      .post('/docker/api/v1/img-delete/')
+      .send({ image: 'ubuntu:13.10' })         // <-- 여기에 운영체제:태그 를 입력하면 됨. 
+      .end((err, res) => {                     // <-- 그냥 ubuntu 라고 적으면 에러 발생(latest 참조때문)
+        expect(err).to.be.null;
+        expect(res).to.have.status(200);
+        setTimeout(done, 16000);
+      });
+  }).timeout(64000);
+
+  // 테스트 #6 : API를 통해 모든 이미지를 제거한다.
+  it('/docker/api/v1/img-delete-all/', (done) => {
+    chai.request(server)
+      .get('/docker/api/v1/img-delete-all/')
+      .end((err, res) => {
+        expect(err).to.be.null;
+        expect(res).to.have.status(200);
+        setTimeout(done, 8000);
+      });
+  }).timeout(16000);
+
+  // 테ㅔ스트 #7 : API를 통해 특정 이미지를 run 한다.
+  it('/docker/api/v1/img-run/', (done) => {
+    chai.request(server)
+      .post('/docker/api/v1/img-run/')
+      .send({ image: 'test', path: './ubuntu.tar' })
+      .end((err, res) => {
+        expect(err).to.be.null;
+        expect(res).to.have.status(200);
+        setTimeout(done, 8000);
+      });
+  }).timeout(16000);
+
+
+  // stop 할 컨테이너의 ID를 아래 숫자란에 넣으면 됨.
+  it('/docker/api/v1/stop/', (done) => {
+    chai.request(server)
+      .post('/docker/api/v1/stop/')
+      .send({ container: '02767fc07765'}) // <-- 숫자란
+      .end((err, res) => {
+        expect(err).to.be.null;
+        expect(res).to.have.status(200);
+        setTimeout(done, 8000);
+      });
+  }).timeout(16000);
+
+  // API를 통해 모든 도커 이미지를 stop 한다.
+  it('/docker/api/v1/stop-all/', (done) => {
+    chai.request(server)
+      .post('/docker/api/v1/stop-all/') // <-- 숫자란
+      .end((err, res) => {
+        expect(err).to.be.null;
+        expect(res).to.have.status(200);
+        setTimeout(done, 8000);
+      });
+  }).timeout(16000);
+
+  it('/docker/api/v1/state/', (done) => {
+    chai.request(server)
+      .post('/docker/api/v1/state/') // <-- 숫자란
+      .send({container:"fbce427523ee"})
+      .end((err, res) => {
+        expect(err).to.be.null;
+        expect(res).to.have.status(200);
+        setTimeout(done, 8000);
+      });
+  }).timeout(16000);
+
+  it('/docker/api/v1/log/', (done) => {
+    chai.request(server)
+      .post('/docker/api/v1/log/') // <-- 숫자란
+      .send({container:"fbce427523ee"})
+      .end((err, res) => {
+        expect(err).to.be.null;
+        expect(res).to.have.status(200);
+        setTimeout(done, 8000);
+      });
+  }).timeout(16000);
+
 });

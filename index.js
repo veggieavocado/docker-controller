@@ -11,8 +11,8 @@ const exec = require('child_process').exec;
 const fs = require('fs');
 // const docker = new Docker(); // 위의 코드와 일치
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+app.use(bodyParser.json({ limit: '50mb' }));
 
 // 아래에서 server를 정의내려줘야 stopServer 함수에서 server.close()를 호출할 수 있다
 const server = app.listen(8080, () => {
@@ -49,7 +49,7 @@ app.post('/docker/api/v1/img-pull/', async (req, res) => {
   const ImgName = req.body.image;
   // console.log(ImgName);
   // console.log(req);
-  const docker = new Docker({ host: '127.0.0.1' });
+  const docker = new Docker();
   docker.pull(ImgName, (err, stream) => {
     if (!err) {
       console.log('Successfully pulled');
@@ -81,7 +81,7 @@ app.post('/docker/api/v1/img-build/', async (req, res) => {
     //   end: true
     // });
     // stream.on('end', () => {
-    //   res.status(200);
+    //   res.status(200);8
     // });
   });
 });
@@ -92,12 +92,15 @@ app.post('/docker/api/v1/img-build/', async (req, res) => {
 // 형식: post 안의 메시지 형식은 다음 { image: <imageName> } 와 같다.
 app.post('/docker/api/v1/img-delete/', async (req, res) => {
   const imageName = req.body.image;
-  const docker = new Docker({ host: '127.0.0.1' });
+  const docker = new Docker(/* { host: '127.0.0.1' } */);
   docker.getImage(imageName).remove((err, data) => {
     if (err) {
       console.log(err);
+      res.status(400);
+    } else {
+      console.log(data);
+      res.status(200);
     }
-    console.log(data);
   });
 });
 
@@ -135,9 +138,11 @@ app.post('/docker/api/v1/img-run/', async (req, res) => {
     if (err) {
       res.json(err);
       console.log(err);
+      res.status(400);
     } else {
       console.log(data);
       res.json(data);
+      res.status(200);
     }
   });
 });
